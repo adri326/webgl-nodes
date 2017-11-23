@@ -1,6 +1,24 @@
 var preview_element;
 var preview_context;
 var do_update = true;
+var programInfo;
+
+const vsSource = `
+  attribute vec4 aVertexPosition;
+
+  uniform mat4 uModelViewMatrix;
+  uniform mat4 uProjectionMatrix;
+
+  void main() {
+    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+  }
+`;
+
+const fsSource = `
+  void main() {
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  }
+`;
 
 var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 window.requestAnimationFrame = requestAnimationFrame;
@@ -20,8 +38,8 @@ var elementsDisplay = {
         elem.height
       );
 
-      if (elem.fillStyle) preview_context.fill();
       if (elem.strokeStyle && elem.lineWidth > 0) preview_context.stroke();
+      if (elem.fillStyle) preview_context.fill();
     },
     properties: {
       width: {name: "Width", type: "int", min: 0, max: 256},
@@ -52,6 +70,44 @@ function reset_preview() {
   preview_context = preview_element.getContext("2d");
   preview_context.fillStyle = "black";
   preview_context.fillRect(0, 0, preview_element.width, preview_element.height);
+  //initWebGL();
+}
+
+function initWebGL() {
+  preview_gl = preview_element.getContext("webgl");
+  if (!preview_gl) {
+    console.error("Warning! WebGL couldn't be loaded!");
+  }
+  preview_gl.clearColor(0, 0, 0, 1);
+  preview_gl.clearDepth(1.0);
+  preview_gl.enable(preview_gl.DEPTH_TEST);
+  preview_gl.depthFunc(preview_gl.LEQUAL);
+
+  preview_gl.clear(preview_gl.COLOR_BUFFER_BIT, preview_gl.DEPTH_BUFFER_BIT);
+
+  const shaderProgram = initShaderProgram(preview_gl, vsSource, fsSource);
+
+  programInfo = {
+    program: shaderProgram,
+    attribLocations: {
+      vertexPosition: preview_gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+    },
+    uniformLocations: {
+      projectionMatrix: preview_gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+      modelViewMatrix: preview_gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+    },
+  };
+
+  const fieldOfView = 45 * Math.PI / 180;   // in radians
+  const aspect = preview_gl.canvas.clientWidth / preview_gl.canvas.clientHeight;
+  const zNear = 0.1;
+  const zFar = 100.0;
+  const projectionMatrix = mat4.create();
+  mat4.perspective(projectionMatrix,
+                   fieldOfView,
+                   aspect,
+                   zNear,
+                   zFar);
 }
 
 function preview_draw_element(elem, x, y) {
@@ -73,6 +129,62 @@ function draw() {
 function update() {
   do_update = true;
 }
+
+function initShaderProgram(gl, vsSource, fsSource) {
+  const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+  const shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+
+  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    console.error("Unable to initialise program" + gl.getProgramInfoLog(shaderProgram));
+    return null;
+  }
+
+  return shaderProgram;
+}
+
+function loadShader(gl, type, source) {
+  const shader = gl.createShader(type);
+
+  gl.shaderSource(shader, source);
+
+  gl.compileShader(shader);
+
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+
+  return shader;
+}
+
+function initBuffers() {
+  const positionBuffer = gl.createBuffer();
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+  const positions = [
+    1.0, 1.0,
+    -1.0, 1.0,
+    1.0, -1.0,
+    -1.0, -1.0
+  ];
+
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array(positions),
+    gl.STATIC_DRAW);
+
+  return {
+    position: positionBuffer
+  };
+}
+
+
 
 window.addEventListener("load", draw);
 window.addEventListener("resize", update);

@@ -14,13 +14,11 @@ function moveElementUp() {
     update_outliner();
     select_element(document.getElementById("outline-list").childNodes[index - 1]);
   }
-  console.log(index);
   update();
 }
 
 function moveElementDown() {
   var index = active_scene.elements.findIndex(elem => {
-    console.log(elem);
     return (elem || {}).ID == (selected_element || {}).ID;
   });
   if (index > -1 && index < active_scene.elements.length - 1) {
@@ -28,6 +26,5 @@ function moveElementDown() {
     update_outliner();
     select_element(document.getElementById("outline-list").childNodes[index + 1]);
   }
-  console.log(index);
   update();
 }

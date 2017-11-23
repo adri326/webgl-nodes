@@ -3,7 +3,6 @@ function initDragNode(elem) {
   var oldX, oldY, diffX, diffY;
 
   function dragMouseDown(event) {
-    console.log("Bananas!");
     event = event || window.event;
 
     oldX = event.clientX;
@@ -26,8 +25,6 @@ function initDragNode(elem) {
 
     elem.style.top = elem.offsetTop - diffY + "px";
     elem.style.left = elem.offsetLeft - diffX + "px";
-
-    console.log("Coconuts!");
   }
 
   function dragShift(event) {
@@ -53,5 +50,5 @@ function initDragNode(elem) {
 }
 
 window.addEventListener("load", function() {
-  console.log(initDragNode(document.getElementById("node-display").childNodes[1]).childNodes[0].onmousedown);
+  initDragNode(document.getElementById("node-display").childNodes[1]);
 });

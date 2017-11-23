@@ -3,6 +3,12 @@ body, html {
   margin: 0px;
   border: none;
   background: #341e24;
+
+  --shadow-x: 1px;
+  --shadow-y: 2px;
+  --shadow-big-width: 10px;
+  --shadow-big-offset: -4px;
+  --shadow-big-color: rgba(0, 0, 0, 0.75);
 }
 
 #preview-window, #node-window, #outline-window, #properties-window {
@@ -27,7 +33,6 @@ body, html {
   top: 0;
   right: 0;
   background: #533a3f;
-  z-index: -1;
 }
 
 #outline-window {
@@ -58,10 +63,19 @@ body, html {
   bottom: 0;
   width: 1em;
   background: #422a2e;
+  z-index: 2;
 }
 
 #node-display {
   overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin-right: 1em;
+  bottom: 0;
+  height: 100%;
+  position: relative;
+  box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-big-width) var(--shadow-big-offset) var(--shadow-big-color) inset;
 }
 
 #node-display > .node {
@@ -71,8 +85,8 @@ body, html {
   min-width: 8em;
   min-height: 6em;
   color: #fdfdfd;
-  box-shadow: 1px 1px 4px -1px rgba(0, 0, 0, 0.5);
-  z-index: -1;
+  box-shadow: 1px 1px 6px -2px rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
 
 #node-display > .node > .title {
@@ -87,6 +101,7 @@ body, html {
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
   cursor: move;
+  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.25);
 }
 
 #node-display > .node > .content {
@@ -132,6 +147,8 @@ body, html {
   margin: 0;
   padding: 0;
   list-style-type: none;
+  margin-bottom: 1.4em;
+  box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-big-width) var(--shadow-big-offset) var(--shadow-big-color) inset;
 }
 
 #outline-list > li {
@@ -219,6 +236,7 @@ body, html {
   height: 1em;
   background: #714d51;
   vertical-align: top;
+  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 
 #properties-list .property-slider::-webkit-slider-thumb {
@@ -228,6 +246,7 @@ body, html {
   height: 1em;
   background: #7E7CA6;
   cursor: pointer;
+  box-shadow: 0px 0px 5px -1px rgba(0, 0, 0, 0.5);
 }
 
 #properties-list .property-slider::-moz-range-thumb {
@@ -235,6 +254,7 @@ body, html {
   height: 1em;
   background: #7E7CA6;
   cursor: pointer;
+  box-shadow: 0px 0px 5px -1px rgba(0, 0, 0, 0.5);
 }
 
 #properties-list .property-input {
@@ -253,7 +273,8 @@ body, html {
   color: #fdfdfd;
   height: 1em;
   vertical-align: top;
-  box-sizing: border-box;;
+  box-sizing: border-box;
+  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 
 #properties-list .property-color {
@@ -262,12 +283,15 @@ body, html {
 	width: 2em;
 	height: 1em;
   background: #714d51;
+  padding: 0;
 }
 #properties-list .property-color::-webkit-color-swatch-wrapper {
 	padding: 0;
+  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 #properties-list .property-color::-webkit-color-swatch {
 	border: none;
+  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 
 #preview-drag {
