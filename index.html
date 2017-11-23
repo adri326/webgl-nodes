@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="./css/main.css" />
+    <script src="./js/main.js"></script>
+    <script src="./js/display.js"></script>
+  </head>
+  <body>
+    <div id="preview-window">
+      <canvas id="preview-canvas"></canvas>
+      <div id="preview-drag" class="invisible"></div>
+    </div>
+    <div id="properties-window">
+      <div class="title">Properties</div>
+      <div id="properties-list"></div>
+    </div>
+    <div id="node-window">
+      <div class="menu"></div>
+    </div>
+    <div id="outline-window">
+      <ul id="outline-list"></ul>
+      <div class="menu">
+        <div id="add-element" onclick="addElement();">+</div>
+        <div id="move-element-up" onclick="moveElementUp();">^</div>
+      </div>
+    </div>
+  </body>
+</html>

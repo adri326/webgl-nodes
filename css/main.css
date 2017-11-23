@@ -1,0 +1,247 @@
+body, html {
+  padding: 0px;
+  margin: 0px;
+  border: none;
+  background: #341e24;
+}
+
+#preview-window, #node-window, #outline-window, #properties-window {
+  border: 1px solid #161616;
+  box-sizing: border-box;
+  position: absolute;
+  --window-margin: 0px;
+  margin: var(--window-margin);
+}
+
+#preview-window {
+  width: calc(40vw - var(--window-margin) * 2);
+  height: calc(30vw - var(--window-margin) * 2);
+  top: 0;
+  left: 0;
+}
+
+#node-window {
+  width: calc(55vw - var(--window-margin) * 2 - 10em);
+  height: calc(100vh - var(--window-margin) * 2);
+  top: 0;
+  right: 0;
+  background: #533a3f;
+}
+
+#outline-window {
+  width: calc(40vw - var(--window-margin) * 2);
+  height: calc(100vh - 30vw - var(--window-margin) * 2);
+  bottom: 0;
+  left: 0;
+  background: #533a3f;
+}
+
+#properties-window {
+  top: 0;
+  bottom: 0;
+  width: calc(10em + 5vw - var(--window-margin) * 2);
+  left: 40vw;
+  background: #422a2e;
+}
+
+#preview-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+#node-window > .menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1em;
+  background: #422a2e;
+}
+
+#outline-window > .menu {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1em;
+  background: #422a2e;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  padding-left: 0.2em;
+}
+
+#outline-window > .menu > div {
+  color: #fdfdfd;
+  min-width: 1em;
+  height: 1em;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+}
+
+#outline-window > .menu > div:hover {
+  background: #553a3f;
+}
+
+#outline-list {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+#outline-list > li {
+  padding: 0;
+  margin: 0;
+  --padding-vertical: 1px;
+  height: calc(1em + var(--padding-vertical) * 2);
+  background: rgba(113, 77, 81, 0);
+  cursor: pointer;
+}
+
+#outline-list > li.selected {
+  background: rgba(66, 42, 46, 1);
+}
+
+#outline-list > li:hover {
+  background: rgba(113, 77, 81, 1);
+}
+
+#outline-list > li > div:nth-child(1) {
+  display: inline-block;
+  padding-left: 4px;
+  padding-right: 4px;
+  color: white;
+}
+
+#properties-window > .title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1em;
+  background: #341e24;
+  color: white;
+  padding-bottom: 0.2em;
+  padding-top: 0.2em;
+  padding-left: 0.3em;
+}
+
+#properties-list {
+  color: #fdfdfd;
+  margin-top: 1.4em;
+  padding-top: 0.4em;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  padding-bottom: 0.4em;
+}
+
+#properties-list > div {
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  height: 1em;
+}
+
+#properties-list > div > div {
+  display: inline-block;
+  --input-margin: 2px;
+}
+
+#properties-list > div > div:nth-child(1) {
+  max-width: 40%;
+  float: left;
+}
+
+#properties-list > div > div:nth-child(2) {
+  width: 60%;
+  float: right;
+}
+
+#properties-list > div:not(:nth-last-child(1)) {
+  border-bottom: 1px solid #341e24;
+}
+
+#properties-list .property-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  display: inline-block;
+  width: calc(60% - var(--input-margin) * 2);
+  margin-left: var(--input-margin);
+  margin-right: var(--input-margin);
+  margin-top: 0.1em;
+  margin-bottom: 0;
+  padding: 0;
+  height: 1em;
+  background: #714d51;
+  vertical-align: top;
+}
+
+#properties-list .property-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  background: #7E7CA6;
+  cursor: pointer;
+}
+
+#properties-list .property-slider::-moz-range-thumb {
+  width: 1em;
+  height: 1em;
+  background: #7E7CA6;
+  cursor: pointer;
+}
+
+#properties-list .property-input {
+  display: inline-block;
+  width: calc(40% - var(--input-margin) * 2);
+  margin-left: var(--input-margin);
+  margin-right: var(--input-margin);
+  margin-top: 0.1em;
+  margin-bottom: 0;
+  padding: 0;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  outline: none;
+  border: none;
+  background: #714d51;
+  color: #fdfdfd;
+  height: 1em;
+  vertical-align: top;
+  box-sizing: border-box;;
+}
+
+#properties-list .property-color {
+	-webkit-appearance: none;
+	border: none;
+	width: 2em;
+	height: 1em;
+  background: #714d51;
+}
+#properties-list .property-color::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+#properties-list .property-color::-webkit-color-swatch {
+	border: none;
+}
+
+#preview-drag {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+#preview-drag.invisible {
+  visibility: hidden;
+}
+
+#preview-drag:not(.invisible) {
+  visibility: visible;
+  cursor: move;
+}
