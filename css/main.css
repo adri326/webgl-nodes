@@ -11,6 +11,7 @@ body, html {
   position: absolute;
   --window-margin: 0px;
   margin: var(--window-margin);
+  z-index: 0;
 }
 
 #preview-window {
@@ -26,6 +27,7 @@ body, html {
   top: 0;
   right: 0;
   background: #533a3f;
+  z-index: -1;
 }
 
 #outline-window {
@@ -56,6 +58,42 @@ body, html {
   bottom: 0;
   width: 1em;
   background: #422a2e;
+}
+
+#node-display {
+  overflow: hidden;
+}
+
+#node-display > .node {
+  position: absolute;
+  border-radius: 4px;
+  background: #714d51;
+  min-width: 8em;
+  min-height: 6em;
+  color: #fdfdfd;
+  box-shadow: 1px 1px 4px -1px rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+#node-display > .node > .title {
+  color: white;
+  text-align: center;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  height: 1em;
+  background: #7e7ca6;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  cursor: move;
+}
+
+#node-display > .node > .content {
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
 }
 
 #outline-window > .menu {

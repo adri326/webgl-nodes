@@ -280,23 +280,6 @@ function init() {
   initDragElement(document.getElementById("preview-drag"));
 }
 
-function addElement() {
-  active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
-  update_outliner();
-  update();
-}
-
-function moveElementUp() {
-  var index = active_scene.elements.findIndex(elem => (elem || {}).ID == (selected_element || {}).ID);
-  if (index > 0) {
-    active_scene.elements.move(index, index - 1);
-    update_outliner();
-    select_element(document.getElementById("properties-list").childNodes[index - 1]);
-  }
-  console.log(index);
-  update();
-}
-
 window.addEventListener("load", init);
 
 Array.prototype.move = function (old_index, new_index) {

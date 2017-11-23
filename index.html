@@ -4,6 +4,8 @@
     <link rel="stylesheet" href="./css/main.css" />
     <script src="./js/main.js"></script>
     <script src="./js/display.js"></script>
+    <script src="./js/outliner.js"></script>
+    <script src="./js/node.js"></script>
   </head>
   <body>
     <div id="preview-window">
@@ -16,12 +18,16 @@
     </div>
     <div id="node-window">
       <div class="menu"></div>
+      <div id="node-display">
+        <div class="node" style="top: 64px; left: 64px;"><div class="title">Title</div><div class="content">Content</div></div>
+      </div>
     </div>
     <div id="outline-window">
       <ul id="outline-list"></ul>
       <div class="menu">
         <div id="add-element" onclick="addElement();">+</div>
         <div id="move-element-up" onclick="moveElementUp();">^</div>
+        <div id="move-element-up" onclick="moveElementDown();">v</div>
       </div>
     </div>
   </body>
