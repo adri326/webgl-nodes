@@ -56,61 +56,6 @@ body, html {
   height: 100%;
 }
 
-#node-window > .menu {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 1em;
-  background: #422a2e;
-  z-index: 2;
-}
-
-#node-display {
-  overflow: hidden;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin-right: 1em;
-  bottom: 0;
-  height: 100%;
-  position: relative;
-  box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-big-width) var(--shadow-big-offset) var(--shadow-big-color) inset;
-}
-
-#node-display > .node {
-  position: absolute;
-  border-radius: 4px;
-  background: #714d51;
-  min-width: 8em;
-  min-height: 6em;
-  color: #fdfdfd;
-  box-shadow: 1px 1px 6px -2px rgba(0, 0, 0, 0.5);
-  z-index: 1;
-}
-
-#node-display > .node > .title {
-  color: white;
-  text-align: center;
-  padding-left: 0.4em;
-  padding-right: 0.4em;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  height: 1em;
-  background: #7e7ca6;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  cursor: move;
-  box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.25);
-}
-
-#node-display > .node > .content {
-  padding-left: 0.4em;
-  padding-right: 0.4em;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-}
-
 #outline-window > .menu {
   position: absolute;
   bottom: 0;
@@ -123,7 +68,7 @@ body, html {
   padding-left: 0.2em;
 }
 
-#outline-window > .menu > div {
+.menu > div {
   color: #fdfdfd;
   min-width: 1em;
   height: 1em;
@@ -134,7 +79,7 @@ body, html {
   cursor: pointer;
 }
 
-#outline-window > .menu > div:hover {
+.menu > div:hover {
   background: #553a3f;
 }
 
@@ -223,23 +168,26 @@ body, html {
 }
 
 #properties-list .property-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  outline: none;
-  display: inline-block;
   width: calc(60% - var(--input-margin) * 2);
   margin-left: var(--input-margin);
   margin-right: var(--input-margin);
   margin-top: 0.1em;
   margin-bottom: 0;
+  vertical-align: top;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  display: inline-block;
   padding: 0;
   height: 1em;
   background: #714d51;
-  vertical-align: top;
   box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 
-#properties-list .property-slider::-webkit-slider-thumb {
+input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 1em;
@@ -249,7 +197,7 @@ body, html {
   box-shadow: 0px 0px 5px -1px rgba(0, 0, 0, 0.5);
 }
 
-#properties-list .property-slider::-moz-range-thumb {
+input[type=range]::-moz-range-thumb {
   width: 1em;
   height: 1em;
   background: #7E7CA6;
@@ -258,12 +206,15 @@ body, html {
 }
 
 #properties-list .property-input {
-  display: inline-block;
   width: calc(40% - var(--input-margin) * 2);
   margin-left: var(--input-margin);
   margin-right: var(--input-margin);
   margin-top: 0.1em;
   margin-bottom: 0;
+}
+
+input[type=number] {
+  display: inline-block;
   padding: 0;
   padding-left: 0.2em;
   padding-right: 0.2em;
@@ -277,7 +228,7 @@ body, html {
   box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
 
-#properties-list .property-color {
+input[type=color] {
 	-webkit-appearance: none;
 	border: none;
 	width: 2em;
@@ -285,13 +236,17 @@ body, html {
   background: #714d51;
   padding: 0;
 }
-#properties-list .property-color::-webkit-color-swatch-wrapper {
+input[type=color]::-webkit-color-swatch-wrapper {
 	padding: 0;
   box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
 }
-#properties-list .property-color::-webkit-color-swatch {
+input[type=color]::-webkit-color-swatch {
 	border: none;
   box-shadow: 1px 2px 4px -2px rgba(0, 0, 0, 0.4) inset;
+}
+
+input:focus {
+  outline: none;
 }
 
 #preview-drag {

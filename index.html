@@ -2,6 +2,7 @@
 <html>
   <head>
     <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/node.css" />
     <script src="./js/main.js"></script>
     <script src="./js/display.js"></script>
     <script src="./js/outliner.js"></script>
@@ -18,10 +19,12 @@
       <div id="properties-list"></div>
     </div>
     <div id="node-window">
-      <div class="menu"></div>
-      <div id="node-display">
-        <div class="node" style="top: 64px; left: 64px;"><div class="title">Title</div><div class="content">Content</div></div>
+      <div id="node-input-type" class="input-type"><input id="node-input-type-input" /></div>
+      <div class="menu">
+        <div id="add-node" onclick="addNode();">+</div>
       </div>
+      <canvas id="node-draw"></canvas>
+      <div id="node-display"></div>
     </div>
     <div id="outline-window">
       <ul id="outline-list"></ul>

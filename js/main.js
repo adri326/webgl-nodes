@@ -10,7 +10,8 @@ var SceneElement = {
       fillStyle: "#dddddd",
       strokeStyle: "#ffffff",
       lineWidth: 0,
-      ID: new_elem_ID()
+      ID: new_elem_ID(),
+      nodes: NodeGroup.new()
     };
   }
 }
@@ -25,10 +26,7 @@ var Scene = {
 
 
 var active_scene = Scene.new();
-
-active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
-active_scene.elements[0].fillStyle = "#714d51";
-active_scene.elements[0].strokeStyle = "#ffffff";
+var selected_element = null;
 
 function new_elem_ID() {
   return (active_scene.elements.length);
@@ -79,6 +77,7 @@ function select_element(elem) {
     }
 
     update_draggable();
+    update_nodes();
   }
 }
 
@@ -161,7 +160,7 @@ function initDragElement(elem) {
     event = event || window.event;
 
     diffX = oldX - event.clientX;
-    diffY = oldY - event.clientY;
+    diffY = oldY - evetopnt.clientY;
     oldX = event.clientX;
     oldY = event.clientY;
 
@@ -276,6 +275,9 @@ function update_outliner() {
 }
 
 function init() {
+  active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
+  active_scene.elements[0].fillStyle = "#714d51";
+  active_scene.elements[0].strokeStyle = "#ffffff";
   update_outliner();
   initDragElement(document.getElementById("preview-drag"));
 }
