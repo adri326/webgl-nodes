@@ -126,11 +126,27 @@
   --left: calc(var(--spacing) * (var(--o) - 1) * -1 * (var(--o) * 0.25) + var(--spacing) * 2 * (var(--n) - 1) * (var(--o) * 0.25) + 50% - 0.25em - 2px);
 }
 
+.node > .vec4 {
+  --handle-background: #d83021;
+}
+
+.node > .vec3 {
+  --handle-background: #d47151;
+}
+
+.node > .vec2 {
+  --handle-background: #d4d251;
+}
+
+.node {
+  --handle-background: #714d51;
+}
+
 #node-display > .node > .handle-top {
   position: absolute;
   top: -0.4em;
   left: var(--left);
-  background: #714d51;
+  background: var(--handle-background);
   border-radius: 100%;
   width: 0.5em;
   height: 0.5em;
@@ -141,13 +157,15 @@
   position: absolute;
   bottom: -0.4em;
   left: var(--left);
-  background: #714d51;
+  background: var(--handle-background);
   border-radius: 100%;
   width: 0.5em;
   height: 0.5em;
   border: 2px solid white;
   z-index: 3;
 }
+
+
 
 #node-draw {
   position: absolute;

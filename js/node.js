@@ -37,13 +37,44 @@ const Node = {
     "value": {
       title: "Value",
       content: `<input type="number" class="property-input" value="0" onchange="update_node_value(this, 'value');" />`,
-      out: 1, in: 0, defaults: {value: 0}},
-    "output_width": {
-      title: "Width",
+      out: 1,
+      in: 0,
+      defaults: {value: 0},
+      outputs: ["value"],
+      output_types: ["float"],
+      internals: ["value"],
+      internal_types: ["float"]
+    },
+    "vec2": {
+      "title": "2D Vector",
+      content: ``,
+      out: 1,
+      in: 2,
+      inputs: ["x", "y"],
+      input_types: ["float", "float"],
+      outputs: ["vector"],
+      output_types: ["vec2"],
+      output: false
+    },
+    "vec3": {
+      "title": "3D Vector",
+      content: ``,
+      out: 1,
+      in: 3,
+      inputs: ["x", "y", "z"],
+      input_types: ["float", "float", "float"],
+      outputs: ["vector"],
+      output_types: ["vec3"],
+      output: false
+    },
+    "output": {
+      title: "Output",
       content: ``,
       out: 0,
-      in: 1,
-      inputs: ["value"]
+      in: 2,
+      inputs: ["color", "alpha"],
+      input_types: ["vec3", "float"],
+      output: true
     }
   },
   new: function(type) {
@@ -98,22 +129,14 @@ function initDragNode(elem) {
     oldX = event.clientX;
     oldY = event.clientY;
 
+    var node = selected_element.nodes.get(elem.ID);
+
     elem.style.top = elem.offsetTop - diffY + "px";
+    node.top = elem.offsetTop;
     elem.style.left = elem.offsetLeft - diffX + "px";
+    node.left = elem.offsetLeft;
 
     updateNodeDrawCanvas();
-  }
-
-  function dragShift(event) {
-    event = event || window.event;
-
-    diffX = oldX - event.clientX;
-    diffY = oldY - event.clientY;
-    oldX = event.clientX;
-    oldY = event.clientY;
-
-    elem.style.height = elem.offsetHeight - diffY + "px";
-    elem.style.width = elem.offsetWidth - diffX + "px";
   }
 
   function endDrag() {
@@ -122,6 +145,67 @@ function initDragNode(elem) {
   }
 
   elem.childNodes[0].onmousedown = dragMouseDown;
+
+  return elem;
+}
+
+function initDragHandle(elem, parent, top, index) {
+
+  var baseX, baseY;
+
+  function dragMouseDown(event) {
+    event = event || window.event;
+
+    baseX = getHandleXCoord(parent, top, index + 1);
+    baseY = getHandleYCoord(parent, top, index + 1);
+
+    document.onmouseup = endDrag;
+    document.onmousemove = drag;
+  }
+
+  function drag(event) {
+    var nodeParent = document.getElementById("node-window");
+
+    event = event || window.event;
+
+    updateNodeDrawCanvas();
+    nodeDrawContext.strokeStyle = "black";
+    nodeDrawContext.beginPath();
+    nodeDrawContext.moveTo(baseX, baseY);
+    nodeDrawContext.lineTo(event.clientX - nodeParent.offsetLeft, event.clientY - nodeParent.offsetTop);
+    nodeDrawContext.stroke();
+  }
+
+  function endDrag(event) {
+    document.onmouseup = null;
+    document.onmousemove = null;
+
+    if (event.target.className.indexOf("handle-") > -1) {
+      var newParent = event.target.parentNode;
+
+      if (newParent.ID != parent.ID) {
+        var newTop = event.target.className.indexOf("handle-top") > -1;
+        var newIndex = null;
+        event.target.classList.forEach(className => {
+          var match = /handle-(\d+)-\d+/.exec(className);
+          if (match) newIndex = +match[1] - 1;
+        });
+        console.log(newParent, newTop, newIndex, parent, top, index);
+        if (newIndex !== null && newTop != top) {
+          if (!top) {
+            selected_element.nodes.get(newParent.ID).inputs[newIndex] = Connection.new(parent.ID, index);
+          }
+          else {
+            selected_element.nodes.get(parent.ID).inputs[index] = Connection.new(newParent.ID, newIndex);
+          }
+        }
+      }
+    }
+
+    updateNodeDrawCanvas();
+  }
+
+  elem.onmousedown = dragMouseDown;
 
   return elem;
 }
@@ -158,12 +242,14 @@ function drawNodeCanvas() {
 function connectHandles(elem1, elem2, index1, index2) {
   var coords1 = getHandleCoords(elem1, false, index1);
   var coords2 = getHandleCoords(elem2, true, index2);
-  nodeDrawContext.lineWidth = 2;
-  nodeDrawContext.strokeStyle = "black";
-  nodeDrawContext.beginPath();
-  nodeDrawContext.moveTo(coords1.x, coords1.y);
-  nodeDrawContext.lineTo(coords2.x, coords2.y);
-  nodeDrawContext.stroke();
+  if (coords1.x !== null && coords1.y !== null && coords2.x !== null && coords2.y !== null) {
+    nodeDrawContext.lineWidth = 2;
+    nodeDrawContext.strokeStyle = "black";
+    nodeDrawContext.beginPath();
+    nodeDrawContext.moveTo(coords1.x, coords1.y);
+    nodeDrawContext.lineTo(coords2.x, coords2.y);
+    nodeDrawContext.stroke();
+  }
 }
 
 function getHandleXCoord(elem, top, index) {
@@ -205,47 +291,55 @@ function getHandle(elem, top, index) {
 function update_nodes() {
   var nodeParent = document.getElementById("node-display");
   if (selected_element) {
-    nodeParent.childNodes.forEach((elem, i) => {
-      if (!selected_element.nodes.get(i)) {
-        // Delete display node
-        nodeParent.removeChild(elem);
+    if (nodeParent.childNodes.length > selected_element.nodes.length) {
+      for (n = selected_element.nodes.length; nodeParent.childNodes[n];) {
+        nodeParent.removeChild(nodeParent.childNodes[n]);
       }
-      else {
-        // Display node shall exist \o/
-        var active_node = selected_element.nodes.get(i);
-        var active_node_class = Node.types[active_node.type];
-        elem.ID = i;
-        elem.childNodes[0].innerHTML = active_node.title || active_node_class.title;
-        elem.childNodes[1].innerHTML = active_node_class.content;
-        elem.childNodes.forEach((child, index) => {
-          if (index >= 2) elem.removeChild(child); // Remove any handle child; we'll do them manually
-        });
-        if (active_node_class.in > 0) {
-          for (n = 0; n < active_node_class.in; n++) {
-            var child = document.createElement("div");
-            child.connection = active_node.inputs[n];
-            child.classList.add("handle-top");
-            child.classList.add("handle-" + (n + 1) + "-" + active_node_class.in);
-            elem.appendChild(child);
-          }
+    }
+    nodeParent.childNodes.forEach((elem, i) => {
+      // Display node shall exist \o/
+      var active_node = selected_element.nodes.get(i);
+      var active_node_class = Node.types[active_node.type];
+      elem.ID = i;
+      elem.style.top = active_node.top + "px";
+      elem.style.left = active_node.left + "px";
+      elem.childNodes[0].innerHTML = active_node.title || active_node_class.title;
+      elem.childNodes[1].innerHTML = active_node_class.content;
+      elem.childNodes.forEach((child, index) => {
+        if (index >= 2) elem.removeChild(child); // Remove any handle child; we'll do them manually
+      });
+      if (active_node_class.in > 0) {
+        for (n = 0; n < active_node_class.in; n++) {
+          var child = document.createElement("div");
+          child.connection = active_node.inputs[n];
+          child.classList.add("handle-top");
+          child.classList.add("handle-" + (n + 1) + "-" + active_node_class.in);
+          if (active_node_class.input_types) child.classList.add(active_node_class.input_types[n]);
+          initDragHandle(child, elem, true, n);
+          elem.appendChild(child);
         }
-        if (active_node_class.out > 0) {
-          for (n = 0; n < active_node_class.out; n++) {
-            var child = document.createElement("div");
-            child.classList.add("handle-bottom");
-            child.classList.add("handle-" + (n + 1) + "-" + active_node_class.out);
-            elem.appendChild(child);
-          }
+      }
+      if (active_node_class.out > 0) {
+        for (n = 0; n < active_node_class.out; n++) {
+          var child = document.createElement("div");
+          child.classList.add("handle-bottom");
+          child.classList.add("handle-" + (n + 1) + "-" + active_node_class.out);
+          if (active_node_class.output_types) child.classList.add(active_node_class.output_types[n]);
+          initDragHandle(child, elem, false, n);
+          elem.appendChild(child);
         }
       }
     });
     if (nodeParent.childNodes.length < selected_element.nodes.length) {
+      // Node creation
       for (n = nodeParent.childNodes.length; n < selected_element.nodes.length; n++) {
         var elem = document.createElement("div");
         elem.classList.add("node");
         var active_node = selected_element.nodes.get(n);
         var active_node_class = Node.types[active_node.type];
         elem.ID = n;
+        elem.style.top = active_node.top + "px";
+        elem.style.left = active_node.left + "px";
         var titleElement = document.createElement("div");
         titleElement.innerHTML = active_node.title || active_node_class.title;
         titleElement.classList.add("title");
@@ -255,19 +349,23 @@ function update_nodes() {
         contentElement.classList.add("content");
         elem.appendChild(contentElement);
         if (active_node_class.in > 0) {
-          for (n = 0; n < active_node_class.in; n++) {
+          for (o = 0; o < active_node_class.in; o++) {
             var child = document.createElement("div");
-            child.connection = active_node.inputs[n];
+            child.connection = active_node.inputs[o];
             child.classList.add("handle-top");
-            child.classList.add("handle-" + (n + 1) + "-" + active_node_class.in);
+            child.classList.add("handle-" + (o + 1) + "-" + active_node_class.in);
+            if (active_node_class.input_types) child.classList.add(active_node_class.input_types[o]);
+            initDragHandle(child, elem, true, o);
             elem.appendChild(child);
           }
         }
         if (active_node_class.out > 0) {
-          for (n = 0; n < active_node_class.out; n++) {
+          for (o = 0; o < active_node_class.out; o++) {
             var child = document.createElement("div");
             child.classList.add("handle-bottom");
-            child.classList.add("handle-" + (n + 1) + "-" + active_node_class.out);
+            child.classList.add("handle-" + (o + 1) + "-" + active_node_class.out);
+            if (active_node_class.output_types) child.classList.add(active_node_class.output_types[o]);
+            initDragHandle(child, elem, false, o);
             elem.appendChild(child);
           }
         }
@@ -280,6 +378,7 @@ function update_nodes() {
     // There is no selected element, get rid of every node
     nodeParent.innerHTML = "";
   }
+  updateNodeDrawCanvas();
 }
 
 function addNode(type) {
@@ -290,9 +389,12 @@ function addNode(type) {
     }
   }
   else {
-    var input = document.getElementById("node-input-type");
-    input.classList.add("visible");
-    input.childNodes[0].value = "";
+    if (selected_element) {
+      var input = document.getElementById("node-input-type");
+      input.classList.add("visible");
+      input.childNodes[0].value = "";
+      input.childNodes[0].focus();
+    }
   }
 }
 
@@ -301,14 +403,64 @@ function update_node_value(input, name) {
   selected_element.nodes.get(elem.ID)[name] = input.value;
 }
 
+function update_node_weights() {
+  selected_element.nodes.array.forEach(node => {
+    node.weight = -1;
+  });
+
+  return new Promise(function(resolve, reject) {
+    var promises = [];
+    selected_element.nodes.array.forEach(node => {
+      var node_parent = Node.types[node.type];
+      if (node_parent.output) {
+        node.weight = 0;
+        promises.push(node_weight_step(node));
+      }
+      else {
+        promises.push(true);
+      }
+    });
+    Promise.all(promises).then(resolve).catch(reject);
+  });
+
+  function node_weight_step(node) {
+    var node_parent = Node.types[node.type];
+    if (node_parent.in == 0) return true;
+    else return new Promise(function(resolve, reject) {
+      var promises = [];
+      node.inputs.forEach(input => {
+        if (input) {
+          promises.push(node_weight_step(selected_element.nodes.get(input.target)));
+          selected_element.nodes.get(input.target).weight = Math.max(node.weight + 1, selected_element.nodes.get(input.target).weight);
+        }
+        else {
+          promises.push(true);
+        }
+      });
+      Promise.all(promises).then(resolve).catch(reject);
+    });
+  }
+}
+
+function get_node_weighted_list() {
+  update_node_weights();
+  return Array.from(selected_element.nodes.array).sort((a, b) => b.weight - a.weight).map((n, i) => i);
+}
+
 
 window.addEventListener("load", function() {
-  update_nodes();
   initNodeDrawCanvas();
+  update_nodes();
   document.getElementById("node-input-type-input").addEventListener("keyup", event => {
     if (event.key !== "Enter") return;
     addNode(document.getElementById("node-input-type-input").value);
     document.getElementById("node-input-type").classList.remove("visible");
+    document.getElementById("node-window").focus();
+    event.preventDefault();
+  });
+  document.getElementById("node-window").addEventListener("keypress", event => {
+    if (event.key !== " ") return;
+    addNode();
     event.preventDefault();
   });
 });

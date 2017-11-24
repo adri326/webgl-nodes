@@ -262,3 +262,7 @@ input:focus {
   visibility: visible;
   cursor: move;
 }
+
+div:focus {
+  outline: none;
+}

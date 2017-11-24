@@ -160,7 +160,7 @@ function initDragElement(elem) {
     event = event || window.event;
 
     diffX = oldX - event.clientX;
-    diffY = oldY - evetopnt.clientY;
+    diffY = oldY - event.clientY;
     oldX = event.clientX;
     oldY = event.clientY;
 
