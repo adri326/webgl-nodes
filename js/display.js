@@ -186,5 +186,44 @@ function initBuffers() {
 
 
 
+function preCompGLSL(node, index) {
+  if (node) {
+    var glslRaw = node.glsl;
+    const replaces = [
+      {match: /{{input\[(\d+)]}}/g, with: "node_input_" + index + "_$1"},
+      {match: /{{internal\[(\d+)]}}/g, with: "node_internal_" + index + "_$1"},
+      {match: /{{output\[(\d+)]}}/g, with: "node_output_" + index + "_$1"},
+      {match: /{{main}}/g, with: "void node_main_" + index + "()"},
+      {match: /{{(index|id)}}/gi, with: index},
+      {match: /{{init\(node_input_\d+_(\d+), ?(.+)\)}}/g, with: `node_input_${index}_$1 = init_node_input(${index}, $1, $2)`}
+    ];
+    replaces.forEach(replace => {
+      glslRaw = glslRaw.replace(replace.match, replace.with);
+    });
+    return glslRaw;
+  }
+  else {
+    return new Promise(function(resolve, reject) {
+      var promises = [];
+      get_node_weighted_list("output").forEach(id => {
+        promises.push(new Promise(function(resolve, reject) {
+          if (!selected_element) reject("No selected element!");
+          var node = selected_element.nodes.get(id);
+          if (!node) reject("Node not found! ID: ${id}");
+          var node_parent = Node.types[node.type];
+          if (!node_parent) reject("Node class not found! Type: ${class}, ID: ${id}");
+          var glsl = preCompGLSL(node_parent, id);
+          if (!glsl) reject("Couldn't generate GLSL! ID: ${id}");
+          resolve(glsl);
+        }));
+      });
+      Promise.all(promises).then(_ => {
+        resolve(_.join("\n"));
+      }).catch(reject);
+    });
+  }
+}
+
+
 window.addEventListener("load", draw);
 window.addEventListener("resize", update);

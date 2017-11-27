@@ -43,7 +43,15 @@ const Node = {
       outputs: ["value"],
       output_types: ["float"],
       internals: ["value"],
-      internal_types: ["float"]
+      internal_types: ["float"],
+      glsl: `
+        uniform float {{internal[0]}};
+        float {{output[0]}};
+
+        {{main}} {
+          {{output[0]}} = {{internal[0]}};
+        }
+      `
     },
     "vec2": {
       "title": "2D Vector",
@@ -54,7 +62,17 @@ const Node = {
       input_types: ["float", "float"],
       outputs: ["vector"],
       output_types: ["vec2"],
-      output: false
+      output: false,
+      glsl: `
+        float {{input[0]}}, {{input[1]}};
+        vec2 {{output[0]}};
+
+        {{main}} {
+          {{init({{input[0]}}, 0.0)}};
+          {{init({{input[1]}}, 0.0)}};
+          {{output[0]}} = vec2({{input[0]}}, {{input[1]}});
+        }
+      `
     },
     "vec3": {
       "title": "3D Vector",
