@@ -45,12 +45,7 @@ const Node = {
       internals: ["value"],
       internal_types: ["float"],
       glsl: `
-        uniform float {{internal[0]}};
-        float {{output[0]}};
-
-        {{main}} {
-          {{output[0]}} = {{internal[0]}};
-        }
+        float {{output[0]}} = {{internal[0]}};
       `
     },
     "vec2": {
@@ -64,14 +59,9 @@ const Node = {
       output_types: ["vec2"],
       output: false,
       glsl: `
-        float {{input[0]}}, {{input[1]}};
-        vec2 {{output[0]}};
-
-        {{main}} {
-          {{init({{input[0]}}, 0.0)}};
-          {{init({{input[1]}}, 0.0)}};
-          {{output[0]}} = vec2({{input[0]}}, {{input[1]}});
-        }
+        float {{input[0]}} = {{init(0, 0.0)}};
+        float {{input[1]}} = {{init(1, 0.0)}};
+        vec2 {{output[0]}} = vec2({{input[0]}}, {{input[1]}});
       `
     },
     "vec3": {
@@ -83,7 +73,13 @@ const Node = {
       input_types: ["float", "float", "float"],
       outputs: ["vector"],
       output_types: ["vec3"],
-      output: false
+      output: false,
+      glsl: `
+        float {{input[0]}} = {{init(0, 0.0)}};
+        float {{input[1]}} = {{init(1, 0.0)}};
+        float {{input[2]}} = {{init(2, 0.0)}};
+        vec3 {{output[0]}} = vec3({{input[0]}}, {{input[1]}}, {{input[2]}});
+      `
     },
     "output": {
       title: "Output",
@@ -92,7 +88,12 @@ const Node = {
       in: 2,
       inputs: ["color", "alpha"],
       input_types: ["vec3", "float"],
-      output: true
+      output: true,
+      glsl: `
+        vec3 {{input[0]}} = {{init(0, {{background_vec3}})}};
+        float {{input[1]}} = {{init(1, 1.0)}};
+        outputs[{{eid}}] = vec4({{input[0]}}, {{input[1]}});
+      `
     }
   },
   new: function(type) {
@@ -208,7 +209,7 @@ function initDragHandle(elem, parent, top, index) {
           var match = /handle-(\d+)-\d+/.exec(className);
           if (match) newIndex = +match[1] - 1;
         });
-        console.log(newParent, newTop, newIndex, parent, top, index);
+        //console.log(newParent, newTop, newIndex, parent, top, index);
         if (newIndex !== null && newTop != top) {
           if (!top) {
             selected_element.nodes.get(newParent.ID).inputs[newIndex] = Connection.new(parent.ID, index);
@@ -218,6 +219,7 @@ function initDragHandle(elem, parent, top, index) {
           }
         }
       }
+      update();
     }
 
     updateNodeDrawCanvas();
@@ -404,6 +406,7 @@ function addNode(type) {
     if (Node.types[type]) {
       selected_element.nodes.add(Node.new(type));
       update_nodes();
+      update();
     }
   }
   else {
@@ -421,14 +424,14 @@ function update_node_value(input, name) {
   selected_element.nodes.get(elem.ID)[name] = input.value;
 }
 
-function update_node_weights() {
-  selected_element.nodes.array.forEach(node => {
+function update_node_weights(filter, element) {
+  element.nodes.array.forEach(node => {
     node.weight = -1;
   });
 
   return new Promise(function(resolve, reject) {
     var promises = [];
-    selected_element.nodes.array.forEach(node => {
+    element.nodes.array.forEach(node => {
       var node_parent = Node.types[node.type];
       if (node_parent.output) {
         node.weight = 0;
@@ -448,8 +451,8 @@ function update_node_weights() {
       var promises = [];
       node.inputs.forEach(input => {
         if (input) {
+          element.nodes.get(input.target).weight = Math.max(node.weight + 1, element.nodes.get(input.target).weight);
           promises.push(node_weight_step(selected_element.nodes.get(input.target)));
-          selected_element.nodes.get(input.target).weight = Math.max(node.weight + 1, selected_element.nodes.get(input.target).weight);
         }
         else {
           promises.push(true);
@@ -460,9 +463,12 @@ function update_node_weights() {
   }
 }
 
-function get_node_weighted_list() {
-  update_node_weights();
-  return Array.from(selected_element.nodes.array).sort((a, b) => b.weight - a.weight).map((n, i) => i);
+function get_node_weighted_list(filter, element) {
+  update_node_weights(filter, element);
+  return Array.from(element.nodes.array)
+    .map((n, i) => {n.ID = i; return n})
+    .sort((a, b) => b.weight - a.weight)
+    .map(n => n.ID);
 }
 
 
