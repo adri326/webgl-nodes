@@ -11,13 +11,17 @@ const vsSource = `
 `;
 
 var fsSourceBase = `
-  precision highp float;
-
-  float init_node_input(int element_id, int node_id, int input_id, float fallback);
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+  #else
+    precision mediump float;
+  #endif
 
   {{uniforms}}
 
   uniform int active_element;
+  uniform vec2 canvas_size;
+  uniform vec3 background_vec3;
 
   void main() {
     vec4 outputs[{{elements_amount}}];
@@ -27,10 +31,6 @@ var fsSourceBase = `
     for (int i = 0; i < {{elements_amount}}; i++) {
       if (i == active_element) gl_FragColor = outputs[i];
     }
-  }
-
-  float init_node_input(int element_id, int node_id, int input_id, float fallback) {
-    return fallback;
   }
 `;
 
@@ -45,6 +45,8 @@ function initWebGL() {
   }
   gl.clearColor(0, 0, 0, 1);
   gl.clearDepth(1.0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   genFsSource().then(fsSource => {
     //console.log(fsSource);
@@ -80,89 +82,16 @@ function initWebGL() {
 
     active_scene.info = info;
   }).catch(console.error);
-
-
-
-
-  /*gl = preview_element.getContext("webgl");
-  if (!gl) {
-    console.error("Warning! WebGL couldn't be loaded!");
-  }
-  gl.clearColor(0, 0, 0, 1);
-  gl.clearDepth(1.0);
-  //gl.enable(gl.DEPTH_TEST);
-  //gl.depthFunc(gl.LEQUAL);node_0_internal_0_0
-
-  gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
-
-  const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-
-  var programInfo = {
-    program: shaderProgram,
-    attribLocations: {
-      vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-    },
-    uniformLocations: {
-      projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-    },
-  };
-
-  var buffers = initBuffers();
-
-  const fieldOfView = 45 * Math.PI / 180;   // in radians
-  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-  const zNear = 0.1;
-  const zFar = 100.0;
-  const projectionMatrix = mat4.create();
-  mat4.perspective(projectionMatrix,
-                   fieldOfView,
-                   aspect,
-                   zNear,
-                   zFar);
-  const modelViewMatrix = mat4.create();
-
-  mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
-
-  gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-
-  const numComponent = 2;
-  const type = gl.FLOAT;
-  const normalize = false;
-  const stride = 0;
-  const offset = 0;
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-  gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition,
-    numComponent,
-    type,
-    normalize,
-    stride,
-    offset);
-
-  gl.useProgram(programInfo.program);
-
-  gl.uniformMatrix4fv(
-    programInfo.uniformLocations.projectionMatrix,
-    false,
-    projectionMatrix
-  );
-  gl.uniformMatrix4fv(
-    programInfo.uniformLocations.modelViewMatrix,
-    false,
-    modelViewMatrix
-  );
-
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);*/
 }
 
 function updateWebGL(info) {
   var aspect_ratio = gl.canvas.clientWidth / gl.canvas.clientHeight;
   active_scene.elements.forEach((element, element_id) => {
     gl.useProgram(info.program);
-    gl.uniform2f(info.uniforms.elementSize, element.width / 128 / aspect_ratio, - element.height / 128);
-    gl.uniform2f(info.uniforms.elementPosition, element.x / 128 / aspect_ratio - 1, 1 - element.y / 128);
+    gl.uniform2f(info.uniforms.elementSize, element.width / 128, - element.height / 128 * aspect_ratio);
+    gl.uniform2f(info.uniforms.elementPosition, element.x / 128 - 1, 1 - element.y / 128 * aspect_ratio);
     gl.uniform1i(info.uniforms.active_element, element_id);
+    gl.uniform2f(info.uniforms.canvas_size, gl.canvas.clientWidth, gl.canvas.clientHeight);
     element.nodes.array.forEach((node, node_id) => {
       var node_parent = Node.types[node.type];
       if (node_parent) {
@@ -196,10 +125,84 @@ function getUniformLocations(gl, program) {
       }
     });
   });
-  ["elementSize", "elementPosition", "active_element"].forEach(_ => {
+  ["elementSize", "elementPosition", "active_element", "canvas_size"].forEach(_ => {
     out[_] = gl.getUniformLocation(program, _);
   });
   return out;
+}
+
+function preCompGLSL(node, element_id, index, element) {
+  if (node) {
+    var glslRaw = node.glsl;
+    const replaces = [
+      {match: /{{input\[(\d+)]}}/g, with: "node_" + element_id + "_input_" + index + "_$1"},
+      {match: /{{internal\[(\d+)]}}/g, with: "node_" + element_id + "_internal_" + index + "_$1"},
+      {match: /{{output\[(\d+)]}}/g, with: "node_" + element_id + "_output_" + index + "_$1"},
+      {match: /{{main}}/g, with: "void node_" + element_id + "_main_" + index + "()"},
+      {match: /{{(index|id)}}/gi, with: index},
+      {match: /{{(element_id|eid)}}/gi, with: element_id},
+      {match: /{{background_vec3}}/g, with: (() => {
+        // Parse the background color of the element
+        var parsed = /^#?([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/.exec(active_scene.elements[element_id].fillStyle);
+        //console.log(active_scene.elements[element_id].fillStyle, parsed);
+        if (parsed) {
+          var r = (parseInt(parsed[1], 16) / 256).toString();
+          var g = (parseInt(parsed[2], 16) / 256).toString();
+          var b = (parseInt(parsed[3], 16) / 256).toString();
+          // Add floating point if not already here
+          if (!/\d+\.\d*/.exec(r)) r = r + ".0";
+          if (!/\d+\.\d*/.exec(g)) g = g + ".0";
+          if (!/\d+\.\d*/.exec(b)) b = b + ".0";
+          return "vec3(" + r + ", " + g + ", " + b + ")";
+        }
+        else {
+          return "vec3(0.0, 0.0, 0.0)";
+        }
+      })()},
+      {match: /{{vec2_null}}/g, with: "vec2(0.0, 0.0)"},
+      {match: /{{vec3_null}}/g, with: "vec3(0.0, 0.0, 0.0)"}
+    ];
+
+    replaces.forEach(replace => {
+      glslRaw = glslRaw.replace(replace.match, replace.with);
+    });
+
+    glslRaw = glslRaw.replace(
+      /{{init\((?:node_\d+_input_\d+_)?(\d+), ?(.+\)?)\)}}/g,
+      (match, input_id, default_value, offset, string) => {
+        var input = active_scene.elements[element_id].nodes.get(index).inputs[+input_id];
+        if (input) {
+          return "node_" + element_id + "_output_" + input.target + "_" + input.index;
+        }
+        else {
+          return default_value;
+        }
+      }
+    );
+
+    return glslRaw;
+  }
+  else {
+    return new Promise(function(resolve, reject) {
+      var promises = [];
+      get_node_weighted_list("output", element).forEach(id => {
+        promises.push(new Promise(function(resolve, reject) {
+          if (!element) reject("No element!");
+          var node = element.nodes.get(id);
+          if (node.weight == -1) resolve();
+          if (!node) reject("Node not found! ID: ${id}");
+          var node_parent = Node.types[node.type];
+          if (!node_parent) reject("Node class not found! Type: ${class}, ID: ${id}");
+          var glsl = preCompGLSL(node_parent, element.ID, id);
+          if (!glsl) reject("Couldn't generate GLSL! ID: ${id}");
+          resolve(glsl);
+        }));
+      });
+      Promise.all(promises).then(_ => {
+        resolve(_.join(""));
+      }).catch(reject);
+    });
+  }
 }
 
 function genFsSource() {
@@ -208,7 +211,9 @@ function genFsSource() {
     var uniforms = "";
     var promises = [];
     active_scene.elements.forEach((element, element_id) => {
-      promises.push(preCompGLSL(false, false, false, element).then(_ => source += "" + _).catch(console.error));
+      // Compute the preCompGLSL result
+      promises.push(preCompGLSL(false, false, false, element).then(res => source += res).catch(console.error));
+      // Compute the internals
       promises.push(new Promise(function(resolve, reject) {
         //element.nodes.array.forEach((node, node_id) => {
         get_node_weighted_list("output", element).forEach(node_id => {

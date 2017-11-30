@@ -34,6 +34,7 @@ function new_elem_ID() {
 
 function select_element(elem) {
   var old_elem = document.getElementById("outline-list").childNodes.forEach(e => {
+    // Updates the "selected" class of the outliner
     if (e.classList.contains("selected")) {
       e.classList.remove("selected");
       e.childNodes[0].contentEditable = false;

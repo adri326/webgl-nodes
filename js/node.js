@@ -48,6 +48,18 @@ const Node = {
         float {{output[0]}} = {{internal[0]}};
       `
     },
+    "coords": {
+      title: "Coords",
+      content: ``,
+      out: 1,
+      in: 0,
+      outputs: ["coord"],
+      output_types: ["vec2"],
+      output: false,
+      glsl: `
+        vec2 {{output[0]}} = gl_FragCoord.xy / canvas_size;
+      `
+    },
     "vec2": {
       "title": "2D Vector",
       content: ``,
@@ -79,6 +91,39 @@ const Node = {
         float {{input[1]}} = {{init(1, 0.0)}};
         float {{input[2]}} = {{init(2, 0.0)}};
         vec3 {{output[0]}} = vec3({{input[0]}}, {{input[1]}}, {{input[2]}});
+      `
+    },
+    "svec2": {
+      "title": "Separate 2D",
+      content: ``,
+      out: 2,
+      in: 1,
+      inputs: ["vector"],
+      input_types: ["vec2"],
+      outputs: ["x", "y"],
+      output_types: ["float", "float"],
+      output: false,
+      glsl: `
+        vec2 {{input[0]}} = {{init(0, {{vec2_null}})}};
+        float {{output[0]}} = {{input[0]}}.x;
+        float {{output[1]}} = {{input[0]}}.y;
+      `
+    },
+    "svec3": {
+      "title": "Separate 3D",
+      content: ``,
+      out: 3,
+      in: 1,
+      inputs: ["vec"],
+      input_types: ["vec3"],
+      outputs: ["x", "y", "z"],
+      output_types: ["float", "float", "float"],
+      output: false,
+      glsl: `
+        vec3 {{input[0]}} = {{init(0, {{vec3_null}}}}
+        float {{output[0]}} = {{input[0]}}.x;
+        float {{output[1]}} = {{input[0]}}.y;
+        float {{output[2]}} = {{input[0]}}.z;
       `
     },
     "output": {
@@ -452,7 +497,7 @@ function update_node_weights(filter, element) {
       node.inputs.forEach(input => {
         if (input) {
           element.nodes.get(input.target).weight = Math.max(node.weight + 1, element.nodes.get(input.target).weight);
-          promises.push(node_weight_step(selected_element.nodes.get(input.target)));
+          promises.push(node_weight_step(element.nodes.get(input.target)));
         }
         else {
           promises.push(true);
