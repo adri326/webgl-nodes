@@ -1,11 +1,13 @@
-function update_outliner() {
+function update_outliner() { // Update the outliner window
   var outliner = document.getElementById("outline-list");
-  outliner.childNodes.forEach((elem, i) => {
+
+  outliner.childNodes.forEach((elem, i) => { // TODO: un-forEach-ify this
     if (!active_scene.elements[i]) {
       // Remove the excess
       outliner.removeChild(elem);
     }
     else {
+      // Update the existing elements
       var active_element = active_scene.elements[i];
       if (elem.ID != active_element.ID) {
         elem.ID = active_element.ID;
@@ -14,7 +16,9 @@ function update_outliner() {
       }
     }
   });
+
   if (outliner.childNodes.length < active_scene.elements.length) {
+    // Create new elements
     for (var n = outliner.childNodes.length; n < active_scene.elements.length; n++) {
       var element = active_scene.elements[n];
       var active_element = document.createElement("li");
@@ -29,13 +33,13 @@ function update_outliner() {
   }
 }
 
-function addElement() {
+function addElement() { // Create a new rectangle
   active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
   update_outliner();
   update();
 }
 
-function moveElementUp() {
+function moveElementUp() { // Moves the selected element up, if possible
   var index = active_scene.elements.findIndex(elem => {
     //console.log(elem);
     return (elem || {}).ID == (selected_element || {}).ID;
@@ -50,7 +54,7 @@ function moveElementUp() {
   update();
 }
 
-function moveElementDown() {
+function moveElementDown() { // Moves the selected element down, if possible
   var index = active_scene.elements.findIndex(elem => {
     return (elem || {}).ID == (selected_element || {}).ID;
   });
@@ -64,7 +68,7 @@ function moveElementDown() {
   update();
 }
 
-function remove_element() {
+function remove_element() { // Delett an element
   var index = active_scene.elements.findIndex(elem => {
     return (elem || {}).ID == (selected_element || {}).ID;
   });

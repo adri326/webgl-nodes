@@ -1,3 +1,5 @@
+
+// Both GLSL bases for the program
 const vsSource = `
   attribute vec4 aVertexPosition;
 
@@ -10,7 +12,7 @@ const vsSource = `
   }
 `;
 
-var fsSourceBase = `
+const fsSourceBase = `
   #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
   #else
@@ -34,12 +36,12 @@ var fsSourceBase = `
   }
 `;
 
-var glsl_default = `outputs[{{element_id}}] = {{background_vec4}};`
+const glsl_default = `outputs[{{element_id}}] = {{background_vec4}};`
 
 var gl;
 var fss;
 
-function initWebGL() {
+function initWebGL() { // Initalise all the WebGL stuff; canvas, shaders...
 
   gl = preview_element.getContext("webgl");
   if (!gl) {
@@ -85,7 +87,7 @@ function initWebGL() {
   }).catch(console.error);
 }
 
-function updateWebGL(info) {
+function updateWebGL(info) { // Draw the scene
   var aspect_ratio = gl.canvas.clientWidth / gl.canvas.clientHeight;
   active_scene.elements.forEach((element, element_id) => {
     gl.useProgram(info.program);
@@ -114,7 +116,7 @@ function updateWebGL(info) {
   });
 }
 
-function getUniformLocations(gl, program) {
+function getUniformLocations(gl, program) { // Get all the uniforms in the program
   var out = {};
   active_scene.elements.forEach(element => {
     element.nodes.array.forEach((node, node_ID) => {
@@ -136,7 +138,7 @@ function getUniformLocations(gl, program) {
   return out;
 }
 
-function preCompGLSL(node, element_id, index, element) {
+function preCompGLSL(node, element_id, index, element) { // Translates an element into GLSL code
   if (node) {
     var glslRaw = node.glsl;
     const replaces = [
@@ -210,7 +212,7 @@ function preCompGLSL(node, element_id, index, element) {
   }
 }
 
-function genFsSource() {
+function genFsSource() { // Creates all of the fragment shader source
   return new Promise(function(resolve, reject) {
     var source = "";
     var uniforms = "";
@@ -295,7 +297,7 @@ function genFsSource() {
 }
 
 
-function initShaderProgram(gl, vsSource, fsSource) {
+function initShaderProgram(gl, vsSource, fsSource) { // Make a program out of the two shaders
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
   const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
@@ -312,7 +314,7 @@ function initShaderProgram(gl, vsSource, fsSource) {
   return shaderProgram;
 }
 
-function loadShader(gl, type, source) {
+function loadShader(gl, type, source) { // Load on shader
   const shader = gl.createShader(type);
 
   gl.shaderSource(shader, source);
@@ -328,7 +330,7 @@ function loadShader(gl, type, source) {
   return shader;
 }
 
-function initBuffers() {
+function initBuffers() { // Create the vertex position buffer
   const positionBuffer = gl.createBuffer();
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);

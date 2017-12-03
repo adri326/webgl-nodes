@@ -28,18 +28,35 @@ var Scene = {
 
 var active_scene = Scene.new();
 var selected_element = null;
+var mouseX = null, mouseY = null;
 
-function new_elem_ID() {
+function init() { // Initialize stuff
+  active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
+  active_scene.elements[0].fillStyle = "#714d51";
+  active_scene.elements[0].strokeStyle = "#ffffff";
+  update_outliner();
+  initDragElement(document.getElementById("preview-drag"));
+  draw();
+  initNodeDrawCanvas();
+  select_element(0);
+}
+
+function new_elem_ID() { // Generates a new ID for an element
   return (active_scene.elements.length);
 }
 
-function select_element(elem) {
+function select_element(elem) { // Selects an element. Supports outline element and IDs
   var old_elem = document.getElementById("outline-list").childNodes.forEach(e => {
     // Updates the "selected" class of the outliner
     if (e.classList.contains("selected")) {
       e.classList.remove("selected");
       e.childNodes[0].contentEditable = false;
       e.onclick = select_element.bind(null, e);
+    }
+  });
+  if (typeof elem == "number") document.getElementById("outline-list").childNodes.forEach(e => {
+    if (e.ID == elem) {
+      elem = e;
     }
   });
   selected_element = active_scene.elements.find(e => e.ID == elem.ID);
@@ -56,7 +73,7 @@ function select_element(elem) {
   }
 }
 
-function slider_update(slider) {
+function slider_update(slider) { // Event triggered by the property sliders
   // Set value
   if (slider.ID) {
     selected_element[slider.ID] = +slider.value || slider.value;
@@ -74,8 +91,7 @@ function slider_update(slider) {
   update();
 }
 
-function update_sliders() {
-  // Update the sliders
+function update_sliders() { // Update the property sliders
   var properties_element = document.getElementById("properties-list");
   properties_element.childNodes.forEach(elem => {
     elem.childNodes.forEach(elem_ => {
@@ -86,7 +102,7 @@ function update_sliders() {
   });
 }
 
-function update_draggable(e) {
+function update_draggable(e) { // Update the position and size of the draggable element in the preview window
   var draggable = document.getElementById("preview-drag");
   var canvas = document.getElementById("preview-canvas");
   if (!e) {
@@ -110,12 +126,12 @@ function update_draggable(e) {
   }
 }
 
-function update_name(name) {
+function update_name(name) { // Function triggered by the outline name editor
   console.log(name.innerText || name);
   selected_element.name = name.innerText || name;
 }
 
-function initDragElement(elem) {
+function initDragElement(elem) { // Initialise the draggable element' dragging feature in the preview window
 
   var oldX, oldY, diffX, diffY;
   var canvas = document.getElementById("preview-canvas");
@@ -133,7 +149,7 @@ function initDragElement(elem) {
       document.onmousemove = dragShift;
   }
 
-  function drag(event) {
+  function drag(event) { // Normal drag function
     event = event || window.event;
 
     diffX = oldX - event.clientX;
@@ -150,7 +166,7 @@ function initDragElement(elem) {
     update_draggable(true);
   }
 
-  function dragShift(event) {
+  function dragShift(event) { // Triggered when shift was pressed on the press
     event = event || window.event;
 
     diffX = oldX - event.clientX;
@@ -167,7 +183,7 @@ function initDragElement(elem) {
     update_draggable(true);
   }
 
-  function endDrag() {
+  function endDrag() { // Ends the drag
     document.onmouseup = null;
     document.onmousemove = null;
   }
@@ -175,7 +191,7 @@ function initDragElement(elem) {
   elem.addEventListener("mousedown", dragMouseDown);
 }
 
-function createSlider(id, property) {
+function createSlider(id, property) { // Create a new property slider
   if (property.type == "int") {
     var element = document.createElement("div");
     var slider = document.createElement("input");
@@ -219,15 +235,7 @@ function createSlider(id, property) {
   }
 }
 
-function init() {
-  active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
-  active_scene.elements[0].fillStyle = "#714d51";
-  active_scene.elements[0].strokeStyle = "#ffffff";
-  update_outliner();
-  initDragElement(document.getElementById("preview-drag"));
-}
-
-function load_image_from_file_selector(selector) {
+function load_image_from_file_selector(selector) { // Returns an image from the file selected by the given file selector; Used to load textures
   var image = new Image();
   var file = selector.files[0];
   var reader = new FileReader();
@@ -245,17 +253,21 @@ function load_image_from_file_selector(selector) {
   return image;
 }
 
-
+// Window events
 window.addEventListener("load", function() {
   init();
-  draw();
 });
 window.addEventListener("resize", function() {
   update_draggable();
   update();
   initNodeDrawCanvas();
 });
+window.addEventListener("mousemove", function(event) {
+  mouseX = event.pageX;
+  mouseY = event.pageY;
+})
 
+// Adds the move(from, to) function to the Array protoype
 Array.prototype.move = function (old_index, new_index) {
     if (new_index >= this.length) {
         var k = new_index - this.length;

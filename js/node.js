@@ -40,7 +40,7 @@ const NodeGroup = {
 }
 
 const Node = {
-  types: {
+  types: { // All teh existing nodes you can get
     "value": {
       title: "Value",
       content: `<input type="number" step="0.1" class="property-input" value="0" onchange="update_node_value(this, 'value');" />`,
@@ -201,11 +201,13 @@ const Node = {
       `
     }
   },
-  new: function(type) {
+  new: function(type, left, top) {
     return {
       type,
       inputs: [],
-      getValue: Node.getValue
+      getValue: Node.getValue,
+      left: left - document.getElementById("node-window").offsetLeft,
+      top
     };
   },
   getValue: function(name) {
@@ -213,7 +215,7 @@ const Node = {
   }
 }
 
-const Connection = {
+const Connection = { // The connection class thing
   new: function(target, index) {
     return {
       target,
@@ -228,7 +230,7 @@ const Connection = {
   }
 }
 
-function initDragNode(elem) {
+function initDragNode(elem) { // Setups the drag-around feature of the nodes
 
   var oldX, oldY, diffX, diffY;
 
@@ -239,10 +241,7 @@ function initDragNode(elem) {
     oldY = event.clientY;
 
     document.onmouseup = endDrag;
-    if (!event.shiftKey)
-      document.onmousemove = drag;
-    else
-      document.onmousemove = dragShift;
+    document.onmousemove = drag;
   }
 
   function drag(event) {
@@ -273,7 +272,7 @@ function initDragNode(elem) {
   return elem;
 }
 
-function initDragHandle(elem, parent, top, index) {
+function initDragHandle(elem, parent, top, index) { // Setups the handle connecting feature
 
   var baseX, baseY;
   var activeIndex, activeParent, activeTop;
@@ -358,7 +357,7 @@ function initDragHandle(elem, parent, top, index) {
 var nodeDrawCanvas;
 var nodeDrawContext;
 
-function initNodeDrawCanvas() {
+function initNodeDrawCanvas() { // Initialize the node handle connection thing-ey canvas.. where it draws the connection between the nodes
   nodeDrawCanvas = document.getElementById("node-draw");
   nodeDrawCanvas.width = document.getElementById("node-display").offsetWidth;
   nodeDrawCanvas.height = document.getElementById("node-display").offsetHeight;
@@ -366,12 +365,12 @@ function initNodeDrawCanvas() {
   updateNodeDrawCanvas();
 }
 
-function updateNodeDrawCanvas() {
+function updateNodeDrawCanvas() { // Update the above thing
   nodeDrawContext.clearRect(0, 0, nodeDrawCanvas.width, nodeDrawCanvas.height);
   drawNodeCanvas();
 }
 
-function drawNodeCanvas() {
+function drawNodeCanvas() { // Draw the above thing
   var nodeParent = document.getElementById("node-display");
   if (selected_element) {
     selected_element.nodes.array.forEach((node, i) => {
@@ -384,7 +383,7 @@ function drawNodeCanvas() {
   }
 }
 
-function connectHandles(elem1, elem2, index1, index2) {
+function connectHandles(elem1, elem2, index1, index2) { // Draw in the above thing a node connection
   var coords1 = getHandleCoords(elem1, false, index1);
   var coords2 = getHandleCoords(elem2, true, index2);
   if (coords1.x !== null && coords1.y !== null && coords2.x !== null && coords2.y !== null) {
@@ -397,7 +396,7 @@ function connectHandles(elem1, elem2, index1, index2) {
   }
 }
 
-function getHandleXCoord(elem, top, index) {
+function getHandleXCoord(elem, top, index) { // Get the X coord of one handle of one node
   var nodeHandle = getHandle(elem, top, index);
   if (nodeHandle) {
     return nodeHandle.offsetLeft + nodeHandle.offsetWidth / 2 + elem.offsetLeft;
@@ -405,7 +404,7 @@ function getHandleXCoord(elem, top, index) {
   return null;
 }
 
-function getHandleYCoord(elem, top, index) {
+function getHandleYCoord(elem, top, index) { // Get the Y coord of one handle of one node
   var nodeHandle = getHandle(elem, top, index);
   if (nodeHandle) {
     return nodeHandle.offsetTop + nodeHandle.offsetHeight / 2 + elem.offsetTop;
@@ -413,14 +412,14 @@ function getHandleYCoord(elem, top, index) {
   return null;
 }
 
-function getHandleCoords(elem, top, index) {
+function getHandleCoords(elem, top, index) { // Get BOTH coords of one handle of one node
   return {
     x: getHandleXCoord(elem, top, index),
     y: getHandleYCoord(elem, top, index)
   };
 }
 
-function getHandle(elem, top, index) {
+function getHandle(elem, top, index) { // Get which handle of which node the given handle is
   var nodeHandle;
   elem.childNodes.forEach(child => {
     if (child.classList &&
@@ -433,15 +432,15 @@ function getHandle(elem, top, index) {
 }
 
 
-function update_nodes() {
+function update_nodes() { // Update the node window
   var nodeParent = document.getElementById("node-display");
   if (selected_element) {
-    if (nodeParent.childNodes.length > selected_element.nodes.length) {
+    if (nodeParent.childNodes.length > selected_element.nodes.length) { // Remove the excess
       for (n = selected_element.nodes.length; nodeParent.childNodes[n];) {
         nodeParent.removeChild(nodeParent.childNodes[n]);
       }
     }
-    nodeParent.childNodes.forEach((elem, i) => {
+    nodeParent.childNodes.forEach((elem, i) => { // Update the existing ones
       // Display node shall exist \o/
       var active_node = selected_element.nodes.get(i);
       var active_node_class = Node.types[active_node.type];
@@ -453,7 +452,7 @@ function update_nodes() {
       elem.childNodes.forEach((child, index) => {
         if (index >= 2) elem.removeChild(child); // Remove any handle child; we'll do them manually
       });
-      if (active_node_class.in > 0) {
+      if (active_node_class.in > 0) { // Create them handles (inputs)
         for (n = 0; n < active_node_class.in; n++) {
           var child = document.createElement("div");
           child.connection = active_node.inputs[n];
@@ -464,7 +463,7 @@ function update_nodes() {
           elem.appendChild(child);
         }
       }
-      if (active_node_class.out > 0) {
+      if (active_node_class.out > 0) { // Create them handles (outputs)
         for (n = 0; n < active_node_class.out; n++) {
           var child = document.createElement("div");
           child.classList.add("handle-bottom");
@@ -475,7 +474,7 @@ function update_nodes() {
         }
       }
     });
-    if (nodeParent.childNodes.length < selected_element.nodes.length) {
+    if (nodeParent.childNodes.length < selected_element.nodes.length) { // Create new nodes
       // Node creation
       for (n = nodeParent.childNodes.length; n < selected_element.nodes.length; n++) {
         var elem = document.createElement("div");
@@ -493,7 +492,7 @@ function update_nodes() {
         contentElement.innerHTML = active_node_class.content;
         contentElement.classList.add("content");
         elem.appendChild(contentElement);
-        if (active_node_class.in > 0) {
+        if (active_node_class.in > 0) { // Create handles (inputs)
           for (o = 0; o < active_node_class.in; o++) {
             var child = document.createElement("div");
             child.connection = active_node.inputs[o];
@@ -504,7 +503,7 @@ function update_nodes() {
             elem.appendChild(child);
           }
         }
-        if (active_node_class.out > 0) {
+        if (active_node_class.out > 0) { // Create handles (outputs)
           for (o = 0; o < active_node_class.out; o++) {
             var child = document.createElement("div");
             child.classList.add("handle-bottom");
@@ -526,10 +525,10 @@ function update_nodes() {
   updateNodeDrawCanvas();
 }
 
-function addNode(type) {
+function addNode(type) { // Adds a node (or triggers the node type input box if no type is provided)
   if (type) {
     if (Node.types[type]) {
-      selected_element.nodes.add(Node.new(type));
+      selected_element.nodes.add(Node.new(type, mouseX, mouseY));
       update_nodes();
       update();
     }
@@ -544,17 +543,17 @@ function addNode(type) {
   }
 }
 
-function remove_node(ID) {
+function remove_node(ID) { // Delett one node
   selected_element.nodes.remove(ID);
   update_nodes();
 }
 
-function update_node_value(input, name) {
+function update_node_value(input, name) { // Used for the sliders and other inputs in the node
   var elem = input.parentNode.parentNode;
   selected_element.nodes.get(elem.ID)[name] = input.value;
 }
 
-function update_node_weights(filter, element) {
+function update_node_weights(filter, element) { // Updates the weight of the node: -1 means not part of the tree, n > -1 means the it is part of the tree, n being the maxmimum branch height it is on
   element.nodes.array.forEach(node => {
     node.weight = -1;
   });
@@ -593,7 +592,7 @@ function update_node_weights(filter, element) {
   }
 }
 
-function get_node_weighted_list(filter, element) {
+function get_node_weighted_list(filter, element) { // Returns a list of indexes of the nodes of the element; this ordered list will be used for the rendering program
   update_node_weights(filter, element);
   return Array.from(element.nodes.array)
     .map((n, i) => {n.ID = i; return n})
@@ -602,8 +601,7 @@ function get_node_weighted_list(filter, element) {
 }
 
 
-window.addEventListener("load", function() {
-  initNodeDrawCanvas();
+window.addEventListener("load", function() { // Stuff done when the page finishes loading
   update_nodes();
   document.getElementById("node-input-type-input").addEventListener("keyup", event => {
     if (event.key !== "Enter") return;

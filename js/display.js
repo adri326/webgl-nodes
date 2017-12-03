@@ -38,14 +38,14 @@ var elementsDisplay = { // Element display and properties declaration
 };
 
 
-function draw_preview() {
+function draw_preview() { // Depreacated
   reset_preview();
   active_scene.elements.forEach(function(elem) {
     preview_draw_element(elem, 0, 0);
   });
 }
 
-function reset_preview() {
+function reset_preview() { // Preview initialisation
   var preview_parent = document.getElementById("preview-window");
   preview_element = document.getElementById("preview-canvas");
   preview_element.width = preview_parent.offsetWidth;
@@ -53,7 +53,7 @@ function reset_preview() {
   initWebGL();
 }
 
-function preview_draw_element(elem, x, y) {
+function preview_draw_element(elem, x, y) { // Depreacated
   var displayer = elementsDisplay[elem.type];
   if (displayer) {
     if (displayer.preview) displayer.preview(elem, x, y);
@@ -61,7 +61,7 @@ function preview_draw_element(elem, x, y) {
   }
 }
 
-function draw() {
+function draw() { // The draw process; uses the requestAnimationFrame feature
   if (do_update) {
     do_update = false;
     //if (preview_context) draw_preview();
@@ -77,6 +77,6 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-function update() {
+function update() { // Trigger when you need to update what's on display
   do_update = true;
 }
