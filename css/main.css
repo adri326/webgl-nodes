@@ -69,7 +69,7 @@ body, html {
 }
 
 .menu > div {
-  color: #fdfdfd;
+  color: #dfdfdf;
   min-width: 1em;
   height: 1em;
   margin: 0;
@@ -81,6 +81,7 @@ body, html {
 
 .menu > div:hover {
   background: #553a3f;
+  color: #ffffff;
 }
 
 #outline-list {
@@ -133,6 +134,17 @@ body, html {
   padding-left: 0.3em;
 }
 
+#properties-window > * > .tab-title {
+  left: 0;
+  right: 0;
+  height: 1em;
+  background: #341e24;
+  color: white;
+  padding-bottom: 0.2em;
+  padding-top: 0.2em;
+  padding-left: 0.3em;
+}
+
 #properties-list {
   color: #fdfdfd;
   margin-top: 1.4em;
@@ -174,6 +186,44 @@ body, html {
   margin-top: 0.1em;
   margin-bottom: 0;
   vertical-align: top;
+}
+
+#textures-list {
+
+}
+
+#textures-list > .texture {
+  color: #fdfdfd;
+  padding-left: 0.2em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  padding-right: 0.2em;
+}
+
+#textures-list > .texture > .name {
+  display: inline-block;
+  width: calc(100% - 1.2em);
+  overflow-x: scroll;
+  overflow-y: visible;
+  max-height: 1.75em;
+  word-break: keep-all;
+}
+
+#textures-list > .texture > .name > div {
+  white-space: nowrap;
+}
+
+#textures-list > .texture > .remove {
+  display: inline-block;
+  margin-top: 0.2em;
+  margin-left: 0.1em;
+  cursor: pointer;
+  color: #fdfdfd;
+  vertical-align: top;
+}
+#textures-list > .texture > .remove:hover {
+  color: #ffffff;
+  background: #553a3f;
 }
 
 input[type=range] {
@@ -265,4 +315,49 @@ input:focus {
 
 div:focus {
   outline: none;
+}
+
+#upload-image {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+#upload-image-label {
+  padding: 0.1em;
+  cursor: pointer;
+  display: inline-block;
+  color: #fdfdfd;
+  margin: 0.2em;
+}
+#upload-image-label:hover {
+  background: #553a3f;
+  color: #ffffff;
+}
+
+i.material-icons {
+  margin-top: -0.1em;
+  font-size: inherit;
+  vertical-align: bottom;
+  padding-bottom: 0.1em;
+}
+
+*::-webkit-scrollbar-track {
+  width: 4px;
+  height: 4px;
+  background: rgba(166, 109, 130, 0.5);
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: rgba(166, 109, 130, 0);
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background: #7e7ca6;
 }

@@ -11,7 +11,8 @@ var SceneElement = {
       strokeStyle: "#ffffff",
       lineWidth: 0,
       ID: new_elem_ID(),
-      nodes: NodeGroup.new()
+      nodes: NodeGroup.new(),
+      textures: []
     };
   }
 }
@@ -49,34 +50,7 @@ function select_element(elem) {
     elem.onclick = null;
 
     // Property window synchronisation
-    var properties_element = document.getElementById("properties-list");
-    var properties = elementsDisplay[selected_element.type].properties;
-    properties_element.childNodes.forEach((property, i) => {
-      property.ID = Object.keys(properties)[i];
-      if (property.ID) {
-        property.name = properties[property.ID]["name"] || property.name;
-        property.childNodes[0].innerHTML = property.name;
-        property.removeChild(property.childNodes[1]);
-        property.appendChild(createSlider(property.ID, properties[property.ID]));
-      }
-      else { // If no ID: the property element is unnecessary
-        properties_element.removeChild(property);
-      }
-    });
-    if (properties_element.childNodes.length < Object.keys(properties).length) {
-      for (n = properties_element.childNodes.length; n < Object.keys(properties).length; n++) {
-        var property = document.createElement("div");
-        property.ID = Object.keys(properties)[n];
-        property.name = properties[property.ID]["name"] || property.name;
-        var nameNode = document.createElement("div");
-        nameNode.innerHTML = property.name;
-        var sliderNode = createSlider(property.ID, properties[property.ID]);
-        property.appendChild(nameNode);
-        property.appendChild(sliderNode);
-        properties_element.appendChild(property);
-      }
-    }
-
+    update_properties();
     update_draggable();
     update_nodes();
   }
@@ -243,38 +217,6 @@ function createSlider(id, property) {
   }
 }
 
-
-function update_outliner() {
-  var outliner = document.getElementById("outline-list");
-  outliner.childNodes.forEach((elem, i) => {
-    if (!active_scene.elements[i]) {
-      // Remove the excess
-      outliner.removeChild(elem);
-    }
-    else {
-      var active_element = active_scene.elements[i];
-      if (elem.ID != active_element.ID) {
-        elem.ID = active_element.ID;
-        elem.name = active_element.name;
-        elem.childNodes[0].innerHTML = active_element.name;
-      }
-    }
-  });
-  if (outliner.childNodes.length < active_scene.elements.length) {
-    for (var n = outliner.childNodes.length; n < active_scene.elements.length; n++) {
-      var element = active_scene.elements[n];
-      var active_element = document.createElement("li");
-      var name_element = document.createElement("div");
-      name_element.innerHTML = element.name;
-      active_element.appendChild(name_element);
-      active_element.onclick = select_element.bind(null, active_element);
-      active_element.ID = element.ID;
-      active_element.name = element.name;
-      outliner.appendChild(active_element);
-    }
-  }
-}
-
 function init() {
   active_scene.elements.push(SceneElement.new("rect", 16, 16, 16, 16));
   active_scene.elements[0].fillStyle = "#714d51";
@@ -282,6 +224,25 @@ function init() {
   update_outliner();
   initDragElement(document.getElementById("preview-drag"));
 }
+
+function load_image_from_file_selector(selector) {
+  var image = new Image();
+  var file = selector.files[0];
+  var reader = new FileReader();
+
+  reader.onloadend = function() {
+    image.src = reader.result;
+  }
+  if (file) {
+    reader.readAsDataURL(file);
+    image.name = image.id = file.name;
+  }
+  else {
+    image.src = "";
+  }
+  return image;
+}
+
 
 window.addEventListener("load", init);
 

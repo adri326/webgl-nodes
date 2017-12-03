@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html ondragstart="return false;" ondrop="return true;">
   <head>
     <link rel="stylesheet" href="./css/main.css" />
     <link rel="stylesheet" href="./css/node.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
     <script src="./js/main.js"></script>
     <script src="./js/display.js"></script>
     <script src="./js/outliner.js"></script>
     <script src="./js/node.js"></script>
     <script src="./js/glMatrix-0.9.5.min.js"></script>
     <script src="./js/webgl.js"></script>
+    <script src="./js/properties.js"></script>
   </head>
   <body>
     <div id="preview-window">
@@ -18,6 +21,12 @@
     <div id="properties-window">
       <div class="title">Properties</div>
       <div id="properties-list"></div>
+      <div id="textures-window">
+        <div class="tab-title">Textures</div>
+        <div id="textures-list"></div>
+        <input type="file" id="upload-image" onchange="texture_upload(this);" />
+        <label for="upload-image" id="upload-image-label"><i class="material-icons">file_upload</i></label>
+      </div>
     </div>
     <div id="node-window" tabindex="0">
       <div id="node-input-type" class="input-type"><input id="node-input-type-input" /></div>
@@ -30,9 +39,10 @@
     <div id="outline-window">
       <ul id="outline-list"></ul>
       <div class="menu">
-        <div id="add-element" onclick="addElement();">+</div>
-        <div id="move-element-up" onclick="moveElementUp();">^</div>
-        <div id="move-element-up" onclick="moveElementDown();">v</div>
+        <div id="add-element" onclick="addElement();"><i class="material-icons">library_add</i></div>
+        <div id="move-element-up" onclick="moveElementUp();"><i class="material-icons">arrow_drop_up</i></div>
+        <div id="move-element-down" onclick="moveElementDown();"><i class="material-icons">arrow_drop_down</i></div>
+        <div id="remove-element" onclick="remove_element();"><i class="material-icons">delete</i></div>
       </div>
     </div>
   </body>

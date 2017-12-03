@@ -27,6 +27,13 @@ const NodeGroup = {
     this.length = this.array.length;
   },
   remove: function(index) {
+    this.array.forEach(node => {
+      node.inputs.forEach((input, id) => {
+        if (input && input.target == index) {
+          node.inputs[id] = null;
+        }
+      });
+    });
     this.array.splice(index, 1);
     this.length = this.array.length;
   }
@@ -36,7 +43,7 @@ const Node = {
   types: {
     "value": {
       title: "Value",
-      content: `<input type="number" class="property-input" value="0" onchange="update_node_value(this, 'value');" />`,
+      content: `<input type="number" step="0.1" class="property-input" value="0" onchange="update_node_value(this, 'value');" />`,
       out: 1,
       in: 0,
       defaults: {value: 0},
@@ -61,7 +68,7 @@ const Node = {
       `
     },
     "vec2": {
-      "title": "2D Vector",
+      title: "2D Vector",
       content: ``,
       out: 1,
       in: 2,
@@ -77,7 +84,7 @@ const Node = {
       `
     },
     "vec3": {
-      "title": "3D Vector",
+      title: "3D Vector",
       content: ``,
       out: 1,
       in: 3,
@@ -94,7 +101,7 @@ const Node = {
       `
     },
     "svec2": {
-      "title": "Separate 2D",
+      title: "Separate 2D",
       content: ``,
       out: 2,
       in: 1,
@@ -110,7 +117,7 @@ const Node = {
       `
     },
     "svec3": {
-      "title": "Separate 3D",
+      title: "Separate 3D",
       content: ``,
       out: 3,
       in: 1,
@@ -124,6 +131,59 @@ const Node = {
         float {{output[0]}} = {{input[0]}}.x;
         float {{output[1]}} = {{input[0]}}.y;
         float {{output[2]}} = {{input[0]}}.z;
+      `
+    },
+    "math": {
+      title: "Math",
+      content: `
+        <select class="property-select" value="0" onchange="update_node_value(this, 'algorithm')">
+          <option value="0">Add</option>
+          <option value="1">Subtract</option>
+          <option value="2">Multiply</option>
+          <option value="3">Divide</option>
+        </select>
+      `,
+      out: 1,
+      in: 2,
+      defaults: {algorithm: 0},
+      outputs: ["value"],
+      output_types: ["float"],
+      inputs: ["value", "value"],
+      input_types: ["float", "float"],
+      internals: ["algorithm"],
+      internal_types: ["int"],
+      glsl: `
+        float {{input[0]}} = {{init(0, 0.0)}};
+        float {{input[1]}} = {{init(1, 0.0)}};
+        float {{output[0]}} = {{input[0]}};
+        if ({{internal[0]}} == 0) {
+          {{output[0]}} = {{input[0]}} + {{input[1]}};
+        }
+        else if ({{internal[0]}} == 1) {
+          {{output[0]}} = {{input[0]}} - {{input[1]}};
+        }
+        else if ({{internal[0]}} == 2) {
+          {{output[0]}} = {{input[0]}} * {{input[1]}};
+        }
+        else if ({{internal[0]}} == 3) {
+          {{output[0]}} = {{input[0]}} / {{input[1]}};
+        }
+      `
+    },
+    "image": {
+      title: "Image texture",
+      content: `
+        <select class="property-select texture-select" onchange="update_node_value(this, 'texture')">
+        </select>
+      `,
+      out: 1,
+      in: 0,
+      outputs: ["image"],
+      output_types: ["sampler2D"],
+      internals: ["texture"],
+      internal_types: ["sampler2D"],
+      glsl: `
+        sample2D {{output[0]}} = {{internal[0]}};
       `
     },
     "output": {
@@ -216,12 +276,29 @@ function initDragNode(elem) {
 function initDragHandle(elem, parent, top, index) {
 
   var baseX, baseY;
+  var activeIndex, activeParent, activeTop;
 
   function dragMouseDown(event) {
     event = event || window.event;
 
     baseX = getHandleXCoord(parent, top, index + 1);
     baseY = getHandleYCoord(parent, top, index + 1);
+
+    activeIndex = index;
+    activeTop = top;
+    activeParent = parent;
+
+    if (top && selected_element.nodes.get(parent.ID).inputs[index]) {
+      var newParent = document.getElementById("node-display").childNodes[selected_element.nodes.get(parent.ID).inputs[index].target];
+      if (newParent) {
+        baseX = getHandleXCoord(newParent, false, selected_element.nodes.get(parent.ID).inputs[index].index + 1);
+        baseY = getHandleYCoord(newParent, false, selected_element.nodes.get(parent.ID).inputs[index].index + 1);
+        activeIndex = selected_element.nodes.get(parent.ID).inputs[index].index;
+        selected_element.nodes.get(parent.ID).inputs[index] = null;
+        activeTop = false;
+        activeParent = newParent;
+      }
+    }
 
     document.onmouseup = endDrag;
     document.onmousemove = drag;
@@ -254,17 +331,20 @@ function initDragHandle(elem, parent, top, index) {
           var match = /handle-(\d+)-\d+/.exec(className);
           if (match) newIndex = +match[1] - 1;
         });
-        //console.log(newParent, newTop, newIndex, parent, top, index);
-        if (newIndex !== null && newTop != top) {
-          if (!top) {
-            selected_element.nodes.get(newParent.ID).inputs[newIndex] = Connection.new(parent.ID, index);
+        //console.log(newParent, newTop, newIndex, activeParent, activeTop, activeIndex);
+        if (newIndex !== null && newTop != activeTop) {
+          if (!activeTop) {
+            selected_element.nodes.get(newParent.ID).inputs[newIndex] = Connection.new(activeParent.ID, activeIndex);
           }
           else {
-            selected_element.nodes.get(parent.ID).inputs[index] = Connection.new(newParent.ID, newIndex);
+            selected_element.nodes.get(activeParent.ID).inputs[activeIndex] = Connection.new(newParent.ID, newIndex);
           }
         }
       }
       update();
+    }
+    else {
+
     }
 
     updateNodeDrawCanvas();
@@ -464,6 +544,11 @@ function addNode(type) {
   }
 }
 
+function remove_node(ID) {
+  selected_element.nodes.remove(ID);
+  update_nodes();
+}
+
 function update_node_value(input, name) {
   var elem = input.parentNode.parentNode;
   selected_element.nodes.get(elem.ID)[name] = input.value;
@@ -528,9 +613,24 @@ window.addEventListener("load", function() {
     event.preventDefault();
   });
   document.getElementById("node-window").addEventListener("keypress", event => {
-    if (event.key !== " ") return;
-    addNode();
-    event.preventDefault();
+    var node_input = document.getElementById("node-input-type-input");
+    if (node_input.parentNode.className.split(" ").indexOf("visible") == -1) {
+      if (event.key == " ") {
+        addNode();
+        event.preventDefault();
+      }
+      if (event.key == "x") {
+        var hovering = document.querySelectorAll(":hover");
+        if (hovering[hovering.length - 1].className.indexOf("title") > -1 && typeof hovering[hovering.length - 1].parentNode.ID != "undefined") {
+          remove_node(hovering[hovering.length - 1].parentNode.ID);
+          event.preventDefault();
+        }
+        //console.log(hovering[hovering.length - 1].className.indexOf("title") > -1, typeof hovering[hovering.length - 1].parentNode.ID != "undefined");
+      }
+    }
+    else {
+      return;
+    }
   });
 });
 

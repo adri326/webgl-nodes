@@ -24,7 +24,7 @@ var fsSourceBase = `
   uniform vec3 background_vec3;
 
   void main() {
-    vec4 outputs[{{elements_amount}}];
+    vec4 outputs[{{elements_amount_min1}}];
 
     {{nodes}}
 
@@ -33,6 +33,8 @@ var fsSourceBase = `
     }
   }
 `;
+
+var glsl_default = `outputs[{{element_id}}] = {{background_vec4}};`
 
 var gl;
 var fss;
@@ -49,7 +51,6 @@ function initWebGL() {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   genFsSource().then(fsSource => {
-    //console.log(fsSource);
     fss = fsSource;
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
     var info = {
@@ -100,6 +101,10 @@ function updateWebGL(info) {
             if (node_parent.internal_types[internal_id] == "float") {
               //console.log(+node[internal]);
               gl.uniform1f(info.uniforms["node_" + element_id + "_internal_" + node_id + "_" + internal_id], +node[internal]);
+            }
+            if (node_parent.internal_types[internal_id] == "int") {
+              //console.log(Math.floor(+node[internal]) || 0);
+              gl.uniform1i(info.uniforms["node_" + element_id + "_internal_" + node_id + "_" + internal_id], Math.floor(+node[internal]) || 0);
             }
           });
         }
@@ -212,7 +217,33 @@ function genFsSource() {
     var promises = [];
     active_scene.elements.forEach((element, element_id) => {
       // Compute the preCompGLSL result
-      promises.push(preCompGLSL(false, false, false, element).then(res => source += res).catch(console.error));
+      promises.push(preCompGLSL(false, false, false, element).then(res => {
+        //console.log(res != "");
+        if (res != "") source += res;
+        else {
+          var bg_vec4 = (() => {
+            // Parse the background color of the element
+            var parsed = /^#?([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/.exec(active_scene.elements[element_id].fillStyle);
+            if (parsed) {
+              var r = (parseInt(parsed[1], 16) / 256).toString();
+              var g = (parseInt(parsed[2], 16) / 256).toString();
+              var b = (parseInt(parsed[3], 16) / 256).toString();
+              // Add floating point if not already here
+              if (!/\d+\.\d*/.exec(r)) r = r + ".0";
+              if (!/\d+\.\d*/.exec(g)) g = g + ".0";
+              if (!/\d+\.\d*/.exec(b)) b = b + ".0";
+              return "vec4(" + r + ", " + g + ", " + b + ", 1.0)";
+            }
+            else {
+              return "vec4(0.0, 0.0, 0.0, 1.0)";
+            }
+          })();
+          source += glsl_default
+            .replace(/{{background_vec4}}/g, bg_vec4)
+            .replace(/{{element_id}}/g, element_id);
+          //console.log(source);
+        }
+      }).catch(console.error));
       // Compute the internals
       promises.push(new Promise(function(resolve, reject) {
         //element.nodes.array.forEach((node, node_id) => {
@@ -226,16 +257,13 @@ function genFsSource() {
                 uniform += "\n" + "uniform " + node_parent.internal_types[internal_id] + " node_" + element_id + "_internal_" + node_id + "_" + internal_id + ";";
               });
               uniforms += uniform;
-              resolve(uniform);
-            }
-            else {
-              resolve("");
             }
           }
           else {
-            reject();
+            //reject();
           }
         });
+        resolve();
       }));
     });
     Promise.all(promises).then(_ => {
@@ -257,8 +285,11 @@ function genFsSource() {
           /{{elements_amount}}/g,
           active_scene.elements.length
         )
+        .replace(
+          /{{elements_amount_min1}}/g,
+          Math.max(active_scene.elements.length, 1)
+        )
       );
-
     }).catch(reject);
   });
 }
