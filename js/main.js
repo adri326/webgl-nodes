@@ -88,14 +88,15 @@ function update_sliders() {
 
 function update_draggable(e) {
   var draggable = document.getElementById("preview-drag");
+  var canvas = document.getElementById("preview-canvas");
   if (!e) {
     // Update drag element
     if (elementsDisplay[selected_element.type].draggable && draggable) {
       draggable.classList.remove("invisible");
-      draggable.style.top = selected_element.y + "px";
-      draggable.style.left = selected_element.x + "px";
-      draggable.style.width = selected_element.width + "px";
-      draggable.style.height = selected_element.height + "px";
+      draggable.style.top = (selected_element.y / 256 * canvas.clientWidth) + "px";
+      draggable.style.left = (selected_element.x / 256 * canvas.clientWidth) + "px";
+      draggable.style.width = (selected_element.width / 256 * canvas.clientWidth) + "px";
+      draggable.style.height = (selected_element.height / 256 * canvas.clientWidth) + "px";
     }
     else {
       draggable.classList.add("invisible");
@@ -117,6 +118,7 @@ function update_name(name) {
 function initDragElement(elem) {
 
   var oldX, oldY, diffX, diffY;
+  var canvas = document.getElementById("preview-canvas");
 
   function dragMouseDown(event) {
     event = event || window.event;
@@ -139,11 +141,11 @@ function initDragElement(elem) {
     oldX = event.clientX;
     oldY = event.clientY;
 
-    selected_element.y = selected_element.y - diffY;
-    selected_element.x = selected_element.x - diffX;
+    selected_element.y = (selected_element.y / 256 * canvas.clientWidth - diffY) * 256 / canvas.clientWidth;
+    selected_element.x = (selected_element.x / 256 * canvas.clientWidth - diffX) * 256 / canvas.clientWidth;
 
-    elem.style.top = selected_element.y + "px";
-    elem.style.left = selected_element.x + "px";
+    elem.style.top = (selected_element.y / 256 * canvas.clientWidth) + "px";
+    elem.style.left = (selected_element.x / 256 * canvas.clientWidth) + "px";
 
     update_draggable(true);
   }
@@ -156,11 +158,11 @@ function initDragElement(elem) {
     oldX = event.clientX;
     oldY = event.clientY;
 
-    selected_element.height = selected_element.height - diffY;
-    selected_element.width = selected_element.width - diffX;
+    selected_element.height = (selected_element.height / 256 * canvas.clientWidth - diffY) * 256 / canvas.clientWidth;
+    selected_element.width = (selected_element.width / 256 * canvas.clientWidth - diffX) * 256 / canvas.clientWidth;
 
-    elem.style.height = selected_element.height + "px";
-    elem.style.width = selected_element.width + "px";
+    elem.style.height = (selected_element.height / 256 * canvas.clientWidth) + "px";
+    elem.style.width = (selected_element.width / 256 * canvas.clientWidth) + "px";
 
     update_draggable(true);
   }
@@ -244,7 +246,15 @@ function load_image_from_file_selector(selector) {
 }
 
 
-window.addEventListener("load", init);
+window.addEventListener("load", function() {
+  init();
+  draw();
+});
+window.addEventListener("resize", function() {
+  update_draggable();
+  update();
+  initNodeDrawCanvas();
+});
 
 Array.prototype.move = function (old_index, new_index) {
     if (new_index >= this.length) {

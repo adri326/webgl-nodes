@@ -80,7 +80,3 @@ function draw() {
 function update() {
   do_update = true;
 }
-
-
-window.addEventListener("load", draw);
-window.addEventListener("resize", update);
